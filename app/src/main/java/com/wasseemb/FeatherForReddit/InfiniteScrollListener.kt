@@ -29,7 +29,7 @@ class InfiniteScrollListener(
       }
     }
     if (!loading && totalItemCount - visibleItemCount <= firstVisibleItem) {
-      Log.d("TAG","End has been reached")
+      Log.d("TAG", "End has been reached")
       // Do something
       func()
       loading = true

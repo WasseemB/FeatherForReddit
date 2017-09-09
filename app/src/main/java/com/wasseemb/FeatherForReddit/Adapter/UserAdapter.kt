@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView.ViewHolder
 import android.view.ViewGroup
 import com.hannesdorfmann.adapterdelegates3.AdapterDelegatesManager
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 
 
 /**
@@ -14,10 +16,11 @@ import com.wasseemb.FeatherForReddit.model.DisplayableItem
 class UserAdapter(activity: Activity, items: List<DisplayableItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   val delegatesManager = AdapterDelegatesManager<List<DisplayableItem>>()
   val items = items
+  val adapterDelegate = UserAdapterDelegate(activity)
 
   init {
     delegatesManager.addDelegate(
-        UserAdapterDelegate(activity))
+        adapterDelegate)
     delegatesManager.addDelegate(
         LoadingDelegateAdapter())
   }
@@ -41,5 +44,6 @@ class UserAdapter(activity: Activity, items: List<DisplayableItem>) : RecyclerVi
   override fun getItemCount(): Int {
     return items.size
   }
+
 
 }

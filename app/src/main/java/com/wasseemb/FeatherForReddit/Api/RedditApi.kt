@@ -10,7 +10,7 @@ import retrofit2.http.Query
  */
 interface RedditApi {
   @GET("/.json")
-  fun getTop(
+  fun getNews(
       @Query("limit") limit: String = "10", @Query("after") after: String? = "")
       : Observable<RedditNewsResponse>
 

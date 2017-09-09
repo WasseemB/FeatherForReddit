@@ -21,8 +21,8 @@ class RestApi() {
     redditApi = retrofit.create(RedditApi::class.java)
   }
 
-  fun getNews(limit: String, after: String?): Observable<RedditNewsResponse> {
-    return redditApi.getTop(limit, after)
+  fun getNews(limit: String="", after: String? =""): Observable<RedditNewsResponse> {
+    return redditApi.getNews(limit, after)
   }
 
   fun openNewSub(subreddit: String,

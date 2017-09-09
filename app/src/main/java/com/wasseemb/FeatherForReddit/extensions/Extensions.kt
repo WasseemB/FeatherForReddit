@@ -2,17 +2,23 @@
 
 package com.wasseemb.FeatherForReddit.extensions
 
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RelativeLayout
+import com.bumptech.glide.Glide
 import com.squareup.picasso.Picasso
-import com.wasseemb.FeatherForReddit.R
+import com.wasseemb.FeatherForReddit.Api.RedditNewsDataResponse
+import com.wasseemb.FeatherForReddit.RetryWithDelay
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
+
 
 /**
  * Created by Wasseem on 03/08/2017.
@@ -41,11 +47,40 @@ fun Double.roundTwoDigits(): String {
   return df.format(this)
 }
 
+fun handleImage(redditItem: RedditNewsDataResponse): String? {
 
-fun ImageView.loadImg(imageUrl: String) {
-  if (TextUtils.isEmpty(imageUrl)) {
-    Picasso.with(context).load(R.mipmap.ic_launcher).into(this)
+  if (redditItem.preview != null) {
+    if (!redditItem.url.contains("i.redd.it") && redditItem.url.contains(".gif")) {
+      return redditItem.url.replace(".gif", "h.gif")
+    } else if (redditItem.url.contains("gfycat")) {
+      return redditItem.url.replace("gfycat", "thumbs.gfycat").plus("-poster.jpg")
+
+    } else
+      return redditItem.preview.images[0].source.url
+
+
+  }
+  return null
+}
+
+fun numToK(number: Double): String {
+  if (number > 1000) return (number / 1000).roundTwoDigits() + "k"
+  else return number.toInt().toString()
+
+}
+
+
+fun <T> Observable<T>.applySchedulersWithDelay(): Observable<T> {
+  return subscribeOn(Schedulers.computation()).observeOn(AndroidSchedulers.mainThread()).retryWhen(
+      RetryWithDelay(3, 2))
+
+}
+
+fun ImageView.loadImg(imageUrl: String?) {
+  if (imageUrl.isNullOrEmpty()) {
+    val relative: RelativeLayout = this.parent as RelativeLayout
+    relative.visibility = View.GONE
   } else {
-    Picasso.with(context).load(imageUrl).into(this)
+    Glide.with(context).load(imageUrl).into(this)
   }
 }

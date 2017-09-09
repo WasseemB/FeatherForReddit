@@ -3,7 +3,6 @@ package com.wasseemb.FeatherForReddit.Adapter
 import android.app.Activity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.RecyclerView.ViewHolder
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.RelativeLayout
@@ -13,11 +12,14 @@ import com.wasseemb.FeatherForReddit.Api.RedditChildrenResponse
 import com.wasseemb.FeatherForReddit.R
 import com.wasseemb.FeatherForReddit.R.layout
 import com.wasseemb.FeatherForReddit.RoundedImageView
+import com.wasseemb.FeatherForReddit.extensions.handleImage
 import com.wasseemb.FeatherForReddit.extensions.inflate
 import com.wasseemb.FeatherForReddit.extensions.loadImg
-import com.wasseemb.FeatherForReddit.extensions.roundTwoDigits
+import com.wasseemb.FeatherForReddit.extensions.numToK
 import com.wasseemb.FeatherForReddit.extensions.timeFromNow
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.redditview_row.view.author
 import kotlinx.android.synthetic.main.redditview_row.view.commentCount
 import kotlinx.android.synthetic.main.redditview_row.view.created_utc
@@ -35,6 +37,8 @@ import java.util.Date
  */
 class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<DisplayableItem>>() {
   //var inflater: LayoutInflater = activity.layoutInflater
+  private val clickSubject = PublishSubject.create<DisplayableItem>()
+  private lateinit var items: List<DisplayableItem>
 
 
   override fun onCreateViewHolder(parent: ViewGroup?): ViewHolder {
@@ -50,44 +54,30 @@ class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<Display
       holder: ViewHolder,
       payloads: MutableList<Any>) {
     val vh = holder as UserViewHolder
+    this.items = items
     //Cast to RedditChildrenResponse from DisplayableItem
     val redditItem = (items[position] as RedditChildrenResponse).data
 
-    // Should start visible always (RecyclerView using some RecyclerItem
+    // Should start visible always (RecyclerView using some RecyclerItem)
     vh.relativelayout.visibility = View.VISIBLE
-
     vh.title.text = redditItem.title
     vh.author.text = redditItem.author
     vh.subreddit.text = "/r/" + redditItem.subreddit
     vh.domain.text = redditItem.domain
-    if (redditItem.preview != null) {
-      if (!redditItem.url.contains("i.redd.it") && redditItem.url.contains(".gif")) {
-        val url = redditItem.url.replace(".gif", "h.gif")
-        Log.d("TAG", url)
-        vh.imageView.loadImg(url)
-      }
-      else if(redditItem.url.contains("gfycat")) {
-        val url = redditItem.url.replace("gfycat", "thumbs.gfycat").plus("-poster.jpg")
-        vh.imageView.loadImg(url)
-
-      }
-
-      else vh.imageView.loadImg(redditItem.preview.images[0].source.url)
-    } else
-      vh.relativelayout.visibility = View.GONE
-    vh.commentCount.text =  String.format(activity.resources.getString(R.string.comment_count_message), numToK(redditItem.num_comments))
-    vh.score.text = String.format(activity.resources.getString(R.string.score_count_message), numToK(redditItem.score))
+    handleImage(redditItem).let { vh.imageView.loadImg(it) }
+    vh.commentCount.text = String.format(
+        activity.resources.getString(R.string.comment_count_message),
+        numToK(redditItem.num_comments))
+    vh.score.text = String.format(activity.resources.getString(R.string.score_count_message),
+        numToK(redditItem.score))
     val postDate = Date((redditItem.created_utc) * 1000)
     vh.created_utc.text = postDate.timeFromNow()
   }
 
-  fun numToK(number: Double): String {
-    if (number > 1000) return (number / 1000).roundTwoDigits() + "k"
-    else return number.toInt().toString()
+  val clickEvent: Observable<DisplayableItem> = clickSubject
 
-  }
 
-  internal class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+  inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     val title: TextView = itemView.title_text
     val author: TextView = itemView.author
@@ -98,6 +88,12 @@ class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<Display
     val subreddit: TextView = itemView.subreddit
     val created_utc: TextView = itemView.created_utc
     val relativelayout: RelativeLayout = itemView.relativeLayout
+
+    init {
+      imageView.setOnClickListener {
+        clickSubject.onNext(items[layoutPosition])
+      }
+    }
 
   }
 

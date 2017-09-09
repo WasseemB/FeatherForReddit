@@ -13,12 +13,6 @@ import com.wasseemb.FeatherForReddit.model.DisplayableItem
 //DisplayableItem is empty interface so that DelegateManager can work (Passing Different Types)
 data class RedditNewsResponse (val data: RedditDataResponse) :DisplayableItem
 
-data class RedditAfterResponse(
-    @Json(name = "after")
-    val after: String?,
-    @Json(name = "before")
-    val before: String?
-)
 
 data class RedditDataResponse(
     @Json(name = "children")
