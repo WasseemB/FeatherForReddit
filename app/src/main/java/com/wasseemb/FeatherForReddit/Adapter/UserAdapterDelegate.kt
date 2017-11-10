@@ -30,6 +30,9 @@ import kotlinx.android.synthetic.main.redditview_row.view.score
 import kotlinx.android.synthetic.main.redditview_row.view.subreddit
 import kotlinx.android.synthetic.main.redditview_row.view.title_text
 import java.util.Date
+import android.view.animation.AlphaAnimation
+
+
 
 
 /**
@@ -72,7 +75,9 @@ class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<Display
         numToK(redditItem.score))
     val postDate = Date((redditItem.created_utc) * 1000)
     vh.created_utc.text = postDate.timeFromNow()
+
   }
+
 
   val clickEvent: Observable<DisplayableItem> = clickSubject
 
@@ -90,7 +95,10 @@ class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<Display
     val relativelayout: RelativeLayout = itemView.relativeLayout
 
     init {
-      imageView.setOnClickListener {
+//      imageView.setOnClickListener {
+//        clickSubject.onNext(items[layoutPosition])
+//      }
+      itemView.setOnClickListener {
         clickSubject.onNext(items[layoutPosition])
       }
     }

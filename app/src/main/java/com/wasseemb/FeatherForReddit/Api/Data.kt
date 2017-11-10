@@ -1,7 +1,7 @@
 package com.wasseemb.FeatherForReddit.Api
 
-import com.squareup.moshi.Json
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
+import com.google.gson.annotations.SerializedName
 
 
 /**
@@ -15,75 +15,81 @@ data class RedditNewsResponse (val data: RedditDataResponse) :DisplayableItem
 
 
 data class RedditDataResponse(
-    @Json(name = "children")
+    @SerializedName( "modhash")
+    var modhash: String = "",
+    @SerializedName( "whitelist_status")
+    var whitelistStatus: String = "",
+    @SerializedName( "children")
     val children: List<RedditChildrenResponse>,
-    @Json(name = "after")
+    @SerializedName( "after")
     val after: String?,
-    @Json(name = "before")
+    @SerializedName( "before")
     val before: String?
 )
 
 data class RedditChildrenResponse(val data: RedditNewsDataResponse) :DisplayableItem
 
 data class RedditNewsDataResponse(
-    @Json(name = "author")
+    @SerializedName( "author")
     val author: String,
-    @Json(name = "title")
+    @SerializedName( "title")
     val title: String,
-    @Json(name = "subreddit")
+    @SerializedName( "subreddit")
     val subreddit: String,
-    @Json(name = "num_comments")
+    @SerializedName( "num_comments")
     val num_comments: Double,
-    @Json(name = "created")
+    @SerializedName( "created")
     val created: Long,
-    @Json(name = "thumbnail")
+    @SerializedName( "thumbnail")
     val thumbnail: String,
-    @Json(name = "url")
+    @SerializedName( "url")
     val url: String,
-    @Json(name = "score")
+    @SerializedName( "score")
     val score: Double,
-    @Json(name = "domain")
+    @SerializedName( "domain")
     val domain: String,
-    @Json(name = "created_utc")
+    @SerializedName( "created_utc")
     val created_utc: Long,
-    @Json(name = "preview")
-    val preview: Preview
+    @SerializedName( "preview")
+    val preview: Preview,
+    @SerializedName( "permalink")
+    val permalink: String
 )
 
 data class Preview(
-    @Json(name = "images")
+    @SerializedName( "images")
     val images: List<Image>,
-    @Json(name = "enabled")
+    @SerializedName( "enabled")
     val enabled: Boolean
 )
 
 data class Image(
-    @Json(name = "source")
+    @SerializedName( "source")
     var source: Source,
-    @Json(name = "resolutions")
+    @SerializedName( "resolutions")
     var resolutions: List<Resolution>,
-    @Json(name = "id")
+    @SerializedName( "id")
     var id: String? = null
 )
 
 data class Resolution(
 
-    @Json(name = "url")
+    @SerializedName( "url")
     var url: String,
-    @Json(name = "width")
+    @SerializedName( "width")
     var width: Int,
-    @Json(name = "height")
+    @SerializedName( "height")
     var height: Int
 
 )
 
 data class Source(
 
-    @Json(name = "url")
+    @SerializedName( "url")
     var url: String,
-    @Json(name = "width")
+    @SerializedName( "width")
     var width: Int,
-    @Json(name = "height")
+    @SerializedName( "height")
     var height: Int
 
 )

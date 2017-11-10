@@ -4,13 +4,21 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.text.InputType
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
+import co.zsmb.materialdrawerkt.builders.drawer
+import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
+import com.afollestad.materialdialogs.MaterialDialog
 import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
+import com.mikepenz.materialdrawer.AccountHeader
+import com.mikepenz.materialdrawer.Drawer
 import com.wasseemb.FeatherForReddit.Adapter.UserAdapter
 import com.wasseemb.FeatherForReddit.Api.RedditChildrenResponse
 import com.wasseemb.FeatherForReddit.Api.RestApi
@@ -31,6 +39,8 @@ class MainActivity : AppCompatActivity() {
   private val restApi = RestApi()
   var after: String? = ""
   private var subscribe: Disposable? = null
+  private lateinit var result: Drawer
+  private lateinit var headerResult: AccountHeader
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -52,7 +62,8 @@ class MainActivity : AppCompatActivity() {
         .subscribe({
           data.addAll(it.data.children)
           data.add(Loading())
-          recyclerview.adapter.notifyDataSetChanged()
+          // recyclerview.adapter.notifyDataSetChanged()
+          runLayoutAnimation(recyclerview)
           after = it.data.after
         }, { e -> Log.d("Tag", e.toString()) }, { Log.d("Tag", "Completed") })
 
@@ -71,6 +82,39 @@ class MainActivity : AppCompatActivity() {
               }
         }, recyclerview.layoutManager as LinearLayoutManager)
     )
+    result = drawer {
+      toolbar = this@MainActivity.toolbar
+      hasStableIds = true
+      savedInstance = savedInstanceState
+      primaryItem("r/ enter a subreddit") {
+        // Called only when this item is clicked
+        onClick { _ ->
+          MaterialDialog.Builder(this@MainActivity)
+              .title("Enter a Subreddit")
+              .inputType(InputType.TYPE_CLASS_TEXT)
+              .input("", "",
+                  { dialog, input ->
+                    val intent = Intent(applicationContext, SubredditActivity::class.java)
+                    intent.putExtra("subreddit", input.toString())
+                    startActivity(intent)
+//                    restApi.openNewSub(input.toString())
+//                        .applySchedulersWithDelay()
+//                        .subscribe {
+//                          data.clear()
+//                          data.addAll(it.data.children)
+//                          recyclerview.adapter = UserAdapter(this@MainActivity, data)
+//                          setupItemClick()
+//
+//                        }
+                    // Do something
+                  })
+              .show()
+          // Log.d("DRAWER", "Click.")
+          false
+        }
+      }
+
+    }
     setupItemClick()
 //
 //
@@ -134,15 +178,33 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
+  //  private fun setupItemClick() {
+//    subscribe = (recyclerview.adapter as UserAdapter).adapterDelegate.clickEvent
+//        .subscribe({
+//          val response = it as RedditChildrenResponse
+//          val intent = Intent(applicationContext, ImageViewActivity::class.java)
+//          intent.putExtra("image", response.data.url)
+//          startActivity(intent)
+//          //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
+//        })
+//  }
   private fun setupItemClick() {
     subscribe = (recyclerview.adapter as UserAdapter).adapterDelegate.clickEvent
         .subscribe({
           val response = it as RedditChildrenResponse
-          val intent = Intent(applicationContext, ImageViewActivity::class.java)
-          intent.putExtra("image", response.data.url)
+          val intent = Intent(applicationContext, DetailViewActivity::class.java)
+          intent.putExtra("permalink", response.data.permalink)
           startActivity(intent)
           //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
         })
+  }
+
+  private fun runLayoutAnimation(recyclerView: RecyclerView) {
+    val context = recyclerView.context
+    val controller = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_slide_left)
+    recyclerView.layoutAnimation = controller
+    recyclerView.adapter.notifyDataSetChanged()
+    recyclerView.scheduleLayoutAnimation()
   }
 }
 
