@@ -21,8 +21,7 @@
         android:layout_height="wrap_content"
         android:background="@color/greyPrimary"
         android:orientation="vertical"
-        android:padding="6dp"
-        android:stateListAnimator="@animator/comment_selection">
+        android:padding="6dp">
 
 
       <TextView

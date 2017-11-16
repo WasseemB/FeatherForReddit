@@ -1,21 +1,20 @@
 package com.wasseemb.FeatherForReddit
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.support.customtabs.CustomTabsIntent
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
 import android.widget.MediaController
 import com.wasseemb.FeatherForReddit.R.layout
+import com.wasseemb.FeatherForReddit.extensions.UrlType.GIF
+import com.wasseemb.FeatherForReddit.extensions.UrlType.IMAGE
+import com.wasseemb.FeatherForReddit.extensions.UrlType.LINK
 import com.wasseemb.FeatherForReddit.extensions.loadImg
+import com.wasseemb.FeatherForReddit.extensions.urlType
 import kotlinx.android.synthetic.main.activity_imageview.imageViewD
 import kotlinx.android.synthetic.main.activity_imageview.videoV
-import android.support.customtabs.CustomTabsIntent
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLConnection
 
 
 /**
@@ -27,23 +26,32 @@ class ImageViewActivity : AppCompatActivity() {
     setContentView(layout.activity_imageview)
     val url = intent.getStringExtra("image")
     Log.d("TAG", url)
+    // supportPostponeEnterTransition()
+
+    //open(url)
 
 
+    when (urlType(url)) {
+      IMAGE -> {
+        videoV.visibility = View.INVISIBLE
+        imageViewD.visibility = View.VISIBLE
+        imageViewD.loadImg(url)
+      }
+      GIF -> {
+        videoV.visibility = View.VISIBLE
+        imageViewD.visibility = View.INVISIBLE
+        val mediaController = MediaController(this)
+        mediaController.setAnchorView(videoV)
+        videoV.setMediaController(mediaController)
+        videoV.setVideoPath(url.replace("gifv", "mp4"))
+        videoV.start()
+        videoV.setOnCompletionListener { videoV.start() }
 
-//    if (!url.endsWith("gifv") && url.contains("imgur"))
-//      imageViewD.loadImg(url)
-//    else if (url.endsWith("gifv")) {
-//      val mediaController = MediaController(this)
-//      mediaController.setAnchorView(videoV)
-//      videoV.setMediaController(mediaController)
-//      videoV.setVideoPath(url.replace("gifv", "mp4"))
-//      videoV.start()
-//      videoV.setOnCompletionListener { videoV.start() }
-//    } else {
-//      open(url)
-//    }
-
+      }
+      LINK -> open(url)
+    }
   }
+
   fun open(url: String) {
     val builder = CustomTabsIntent.Builder()
     builder.setToolbarColor(R.color.primary)

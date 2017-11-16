@@ -2,17 +2,27 @@
 
 package com.wasseemb.FeatherForReddit.extensions
 
+import android.content.Context
+import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import com.bumptech.glide.Glide
-import com.squareup.picasso.Picasso
+import com.wasseemb.FeatherForReddit.Adapter.UserAdapter
+import com.wasseemb.FeatherForReddit.Api.RedditChildrenResponse
 import com.wasseemb.FeatherForReddit.Api.RedditNewsDataResponse
+import com.wasseemb.FeatherForReddit.DetailViewActivity
+import com.wasseemb.FeatherForReddit.ImageViewActivity
 import com.wasseemb.FeatherForReddit.RetryWithDelay
+import com.wasseemb.FeatherForReddit.extensions.UrlType.GIF
+import com.wasseemb.FeatherForReddit.extensions.UrlType.IMAGE
+import com.wasseemb.FeatherForReddit.extensions.UrlType.LINK
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -23,6 +33,38 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by Wasseem on 03/08/2017.
  */
+
+private var subscribe: Disposable? = null
+
+enum class UrlType {
+  IMAGE, LINK, GIF, VIDEO
+}
+
+fun setupItemClick(userAdapter: UserAdapter, context: Context) {
+  subscribe = userAdapter.adapterDelegate.clickEvent
+      .subscribe({
+        val response = it as RedditChildrenResponse
+        val intent = Intent(context, DetailViewActivity::class.java)
+        intent.putExtra("permalink", response.data.permalink)
+//          val options = makeSceneTransitionAnimation(this, this.card_view,
+//              "robot_trans").toBundle()
+        context.startActivity(intent)
+        //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
+      }, { e -> Log.d("SubredditActivity", e.toString()) },
+          { Log.d("SubredditActivity", "Completed") })
+}
+
+fun setupImageClick(userAdapter: UserAdapter, context: Context) {
+  subscribe = userAdapter.adapterDelegate.imageClickEvent
+      .subscribe({
+        val response = it as RedditChildrenResponse
+        val intent = Intent(context, ImageViewActivity::class.java)
+        intent.putExtra("image", response.data.url)
+        context.startActivity(intent)
+        //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
+      })
+}
+
 fun ViewGroup.inflate(layoutId: Int, attachToRoot: Boolean = false): View {
   return LayoutInflater.from(context).inflate(layoutId, this, attachToRoot)
 }
@@ -63,6 +105,17 @@ fun handleImage(redditItem: RedditNewsDataResponse): String? {
   return null
 }
 
+
+fun urlType(url: String): UrlType {
+  if (url.endsWith("gif") || url.endsWith("gifv") || url.contains("gfycat"))
+    return GIF
+  else if (url.endsWith("png") || url.endsWith(".jpg") || url.endsWith("jpeg"))
+    return IMAGE
+  else
+    return LINK
+}
+
+
 fun numToK(number: Double): String {
   if (number > 1000) return (number / 1000).roundTwoDigits() + "k"
   else return number.toInt().toString()
@@ -83,4 +136,6 @@ fun ImageView.loadImg(imageUrl: String?) {
   } else {
     Glide.with(context).load(imageUrl).into(this)
   }
+
+
 }

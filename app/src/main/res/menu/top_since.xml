@@ -3,29 +3,33 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.wasseemb.FeatherForReddit.MainActivity">
   <item
-      android:id="@+id/action_hot"
+      android:id="@+id/action_hour"
       android:orderInCategory="100"
-      android:title="hot"
+      android:title="hour"
       app:showAsAction="never"/>
   <item
-      android:id="@+id/action_new"
+      android:id="@+id/action_day"
       android:orderInCategory="100"
-      android:title="new"
+      android:title="24 hours"
       app:showAsAction="never"/>
   <item
-      android:id="@+id/action_rising"
+      android:id="@+id/action_week"
       android:orderInCategory="100"
-      android:title="rising"
+      android:title="week"
       app:showAsAction="never"/>
   <item
-      android:id="@+id/action_controversial"
+      android:id="@+id/action_month"
       android:orderInCategory="100"
-      android:title="controversial"
+      android:title="month"
       app:showAsAction="never"/>
   <item
-      android:id="@+id/action_top"
+      android:id="@+id/action_year"
       android:orderInCategory="100"
-      android:title="top"
+      android:title="year"
       app:showAsAction="never"/>
-
+  <item
+      android:id="@+id/action_alltime"
+      android:orderInCategory="100"
+      android:title="all time"
+      app:showAsAction="never"/>
 </menu>

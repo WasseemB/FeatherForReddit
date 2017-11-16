@@ -24,7 +24,7 @@ class RestApi() {
         .baseUrl("https://www.reddit.com")
         .addConverterFactory(GsonConverterFactory.create())
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-      //  .client(httpClient.build())
+        //  .client(httpClient.build())
         .build()
 
     redditApi = retrofit.create(RedditApi::class.java)
@@ -34,11 +34,23 @@ class RestApi() {
     return redditApi.getNews(limit, after)
   }
 
-  fun getPost(permalink: String): Observable<List<Post>>{
+  fun getPost(permalink: String): Observable<List<Post>> {
     return redditApi.getPost(permalink + ".json?limit=10")
   }
 
+//  fun openNewSub(subreddit: String,
+//      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, after)
+
   fun openNewSub(subreddit: String,
-      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, after)
+      mode: String = "hot",
+      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, mode,
+      after)
+
+  fun openSubSort(subreddit: String,
+      mode: String = "top",
+      after: String = "", time: String): Observable<RedditNewsResponse> = redditApi.openSubSort(
+      subreddit, mode,
+      after, mode, time)
+
 
 }

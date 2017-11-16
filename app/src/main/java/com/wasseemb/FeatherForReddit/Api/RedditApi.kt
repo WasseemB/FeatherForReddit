@@ -18,6 +18,16 @@ interface RedditApi {
   @GET("r/{subreddit}/.json")
   fun openNewSub(@Path("subreddit") subreddit: String,
       @Query("after") after: String): Observable<RedditNewsResponse>
+
+  @GET("r/{subreddit}/{mode}/.json")
+  fun openNewSub(@Path("subreddit") subreddit: String, @Path("mode") mode: String,
+      @Query("after") after: String): Observable<RedditNewsResponse>
+
+  @GET("r/{subreddit}/{mode}/.json")
+  fun openSubSort(@Path("subreddit") subreddit: String, @Path("mode") mode: String,
+      @Query("after") after: String, @Query("sort") sort: String, @Query(
+          "t") time: String): Observable<RedditNewsResponse>
+
   @GET
   fun getPost(@Url permalink: String): Observable<List<Post>>
 }

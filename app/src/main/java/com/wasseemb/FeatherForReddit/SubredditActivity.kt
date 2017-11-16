@@ -1,12 +1,11 @@
 package com.wasseemb.FeatherForReddit
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.widget.LinearLayout
-import com.bluelinelabs.conductor.Conductor
-import com.bluelinelabs.conductor.Router
-import com.bluelinelabs.conductor.RouterTransaction
+import com.lapism.searchview.SearchView
 import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.Drawer
 import com.wasseemb.FeatherForReddit.Adapter.UserAdapter
@@ -15,21 +14,16 @@ import com.wasseemb.FeatherForReddit.R.layout
 import com.wasseemb.FeatherForReddit.extensions.applySchedulersWithDelay
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
 import com.wasseemb.FeatherForReddit.model.Loading
-import io.reactivex.disposables.Disposable
-import kotlinx.android.synthetic.main.activity_main.controller_container
-import kotlinx.android.synthetic.main.activity_main.toolbar
 import kotlinx.android.synthetic.main.fragment_main.recyclerview
 
 /**
  * Created by Wasseem on 05/10/2017.
  */
-class SubredditActivity :AppCompatActivity() {
+class SubredditActivity : AppCompatActivity() {
 
-  private lateinit var router: Router
   var data = ArrayList<DisplayableItem>()
   private val restApi = RestApi()
   var after: String? = ""
-  private var subscribe: Disposable? = null
   private lateinit var result: Drawer
   private lateinit var headerResult: AccountHeader
 
@@ -38,11 +32,26 @@ class SubredditActivity :AppCompatActivity() {
     setContentView(layout.activity_subreddit)
 
     val subreddit = intent.getStringExtra("subreddit")
-    supportActionBar?.title = subreddit.capitalize()
+    //supportActionBar?.title = subreddit.capitalize()
 
-    router = Conductor.attachRouter(this, controller_container, savedInstanceState)
-    if (!router.hasRootController()) {
-      router.setRoot(RouterTransaction.with(MainActivityFragment()))
+    val searchView = findViewById<SearchView>(R.id.searchView)
+
+    if (searchView != null) {
+      searchView.versionMargins = SearchView.VersionMargins.TOOLBAR_SMALL
+      searchView.hint = subreddit
+      searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        override fun onQueryTextSubmit(query: String): Boolean {
+          val intent = Intent(applicationContext, SubredditActivity::class.java)
+          intent.putExtra("subreddit", query)
+          startActivity(intent)
+          searchView.close(false)
+          return true
+        }
+
+        override fun onQueryTextChange(newText: String): Boolean {
+          return false
+        }
+      })
     }
 
     recyclerview.setHasFixedSize(true)
@@ -50,18 +59,19 @@ class SubredditActivity :AppCompatActivity() {
     recyclerview.adapter = UserAdapter(this, data)
 
     restApi.openNewSub(subreddit)
-                        .applySchedulersWithDelay()
-                        .subscribe {
-                          data.clear()
-                          data.addAll(it.data.children)
-                          after = it.data.after
-                          recyclerview.adapter = UserAdapter(this, data)
+        .applySchedulersWithDelay()
+        .subscribe {
+          data.clear()
+          data.addAll(it.data.children)
+          after = it.data.after
+          //recyclerview.adapter = UserAdapter(this, data)
+          recyclerview.adapter.notifyDataSetChanged()
 
-                        }
+        }
 
     recyclerview.addOnScrollListener(
         InfiniteScrollListener({
-          restApi.openNewSub(subreddit,after!!)
+          restApi.openNewSub(subreddit, after!!)
               .applySchedulersWithDelay()
               .subscribe {
                 val last = data.size
@@ -73,6 +83,12 @@ class SubredditActivity :AppCompatActivity() {
               }
         }, recyclerview.layoutManager as LinearLayoutManager)
     )
+    com.wasseemb.FeatherForReddit.extensions.setupItemClick(recyclerview.adapter as UserAdapter,
+        applicationContext)
+    com.wasseemb.FeatherForReddit.extensions.setupImageClick(recyclerview.adapter as UserAdapter,
+        applicationContext)
+
   }
+
 
 }

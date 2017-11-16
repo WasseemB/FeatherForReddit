@@ -13,6 +13,7 @@ import com.wasseemb.FeatherForReddit.extensions.numToK
 import com.wasseemb.FeatherForReddit.extensions.timeFromNow
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
 import io.reactivex.disposables.Disposable
+import kotlinx.android.synthetic.main.reddit_row.card_view
 import kotlinx.android.synthetic.main.redditview_row.author
 import kotlinx.android.synthetic.main.redditview_row.commentCount
 import kotlinx.android.synthetic.main.redditview_row.created_utc
@@ -36,13 +37,11 @@ class DetailViewActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(layout.redditview_row)
+    setContentView(layout.reddit_row)
 
-//    router = Conductor.attachRouter(this, controller_container, savedInstanceState)
-//    if (!router.hasRootController()) {
-//      router.setRoot(RouterTransaction.with(MainActivityFragment()))
-//    }
     val permalink = intent.getStringExtra("permalink")
+    card_view.transitionName ="robot_trans"
+
     //Log.d("PERM",permalink)
 
 

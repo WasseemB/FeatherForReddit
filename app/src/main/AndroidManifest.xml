@@ -24,7 +24,7 @@
       </intent-filter>
     </activity>
     <activity android:name=".ImageViewActivity"/>
-    <activity android:name=".DetailViewActivity"/>
+    <activity android:name=".DetailViewActivity" android:parentActivityName=".MainActivity"/>
     <activity android:name=".SubredditActivity" android:parentActivityName=".MainActivity"/>
   </application>
 
