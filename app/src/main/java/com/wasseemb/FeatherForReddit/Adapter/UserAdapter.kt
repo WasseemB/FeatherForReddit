@@ -4,21 +4,30 @@ import android.app.Activity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.RecyclerView.ViewHolder
 import android.view.ViewGroup
+import com.hannesdorfmann.adapterdelegates3.AdapterDelegate
 import com.hannesdorfmann.adapterdelegates3.AdapterDelegatesManager
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper.get
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
-import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
 
 
 /**
  * Created by Wasseem on 31/07/2017.
  */
-class UserAdapter(activity: Activity, items: List<DisplayableItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class UserAdapter(activity: Activity,
+    items: List<DisplayableItem>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
   val delegatesManager = AdapterDelegatesManager<List<DisplayableItem>>()
   val items = items
-  val adapterDelegate = UserAdapterDelegate(activity)
+  val adapterDelegate: AdapterDelegate<List<DisplayableItem>>
 
   init {
+    val prefs = PreferenceHelper.defaultPrefs(activity)
+    val value: String? = prefs["card", "mini"] //getter
+    adapterDelegate = if (value.equals("mini"))
+      UserAdapterMiniDelegate(activity)
+    else
+      UserAdapterDelegate(activity)
+
     delegatesManager.addDelegate(
         adapterDelegate)
     delegatesManager.addDelegate(

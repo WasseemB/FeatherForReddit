@@ -10,13 +10,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RelativeLayout
-import com.bumptech.glide.Glide
+import com.squareup.picasso.Picasso
 import com.wasseemb.FeatherForReddit.Adapter.UserAdapter
+import com.wasseemb.FeatherForReddit.Adapter.UserAdapterDelegate
+import com.wasseemb.FeatherForReddit.Adapter.UserAdapterMiniDelegate
 import com.wasseemb.FeatherForReddit.Api.RedditChildrenResponse
 import com.wasseemb.FeatherForReddit.Api.RedditNewsDataResponse
 import com.wasseemb.FeatherForReddit.DetailViewActivity
 import com.wasseemb.FeatherForReddit.ImageViewActivity
 import com.wasseemb.FeatherForReddit.RetryWithDelay
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper.get
 import com.wasseemb.FeatherForReddit.extensions.UrlType.GIF
 import com.wasseemb.FeatherForReddit.extensions.UrlType.IMAGE
 import com.wasseemb.FeatherForReddit.extensions.UrlType.LINK
@@ -41,7 +44,17 @@ enum class UrlType {
 }
 
 fun setupItemClick(userAdapter: UserAdapter, context: Context) {
-  subscribe = userAdapter.adapterDelegate.clickEvent
+  val prefs = PreferenceHelper.defaultPrefs(context)
+  val value: String? = prefs["card", "mini"] //getter
+  if (value.equals("mini"))
+    setupItemClickMini(userAdapter, context)
+  else
+    setupItemClickLarge(userAdapter, context)
+}
+
+fun setupItemClickMini(userAdapter: UserAdapter, context: Context) {
+
+  subscribe = (userAdapter.adapterDelegate as UserAdapterMiniDelegate).clickEvent
       .subscribe({
         val response = it as RedditChildrenResponse
         val intent = Intent(context, DetailViewActivity::class.java)
@@ -54,8 +67,44 @@ fun setupItemClick(userAdapter: UserAdapter, context: Context) {
           { Log.d("SubredditActivity", "Completed") })
 }
 
+fun setupItemClickLarge(userAdapter: UserAdapter, context: Context) {
+
+  subscribe = (userAdapter.adapterDelegate as UserAdapterDelegate).clickEvent
+      .subscribe({
+        val response = it as RedditChildrenResponse
+        val intent = Intent(context, DetailViewActivity::class.java)
+        intent.putExtra("permalink", response.data.permalink)
+//          val options = makeSceneTransitionAnimation(this, this.card_view,
+//              "robot_trans").toBundle()
+        context.startActivity(intent)
+        //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
+      }, { e -> Log.d("SubredditActivity", e.toString()) },
+          { Log.d("SubredditActivity", "Completed") })
+}
+
+
 fun setupImageClick(userAdapter: UserAdapter, context: Context) {
-  subscribe = userAdapter.adapterDelegate.imageClickEvent
+  val prefs = PreferenceHelper.defaultPrefs(context)
+  val value: String? = prefs["card", "mini"] //getter
+  if (value.equals("mini"))
+    setupImageClickMini(userAdapter, context)
+  else
+    setupImageClickLarge(userAdapter, context)
+}
+
+fun setupImageClickMini(userAdapter: UserAdapter, context: Context) {
+  subscribe = (userAdapter.adapterDelegate as UserAdapterMiniDelegate).imageClickEvent
+      .subscribe({
+        val response = it as RedditChildrenResponse
+        val intent = Intent(context, ImageViewActivity::class.java)
+        intent.putExtra("image", response.data.url)
+        context.startActivity(intent)
+        //Toast.makeText(this, "Clicked on ${response.data.title}", Toast.LENGTH_LONG).show()
+      })
+}
+
+fun setupImageClickLarge(userAdapter: UserAdapter, context: Context) {
+  subscribe = (userAdapter.adapterDelegate as UserAdapterDelegate).imageClickEvent
       .subscribe({
         val response = it as RedditChildrenResponse
         val intent = Intent(context, ImageViewActivity::class.java)
@@ -134,8 +183,25 @@ fun ImageView.loadImg(imageUrl: String?) {
     val relative: RelativeLayout = this.parent as RelativeLayout
     relative.visibility = View.GONE
   } else {
-    Glide.with(context).load(imageUrl).into(this)
+    Picasso.with(context)
+        .load(imageUrl)
+        .fit()
+        .centerCrop()
+        .into(this)
+    //Glide.with(context).load(imageUrl).into(this)
   }
+
+
+}
+
+fun ImageView.loadImage(imageUrl: String?) {
+
+  Picasso.with(context)
+      .load(imageUrl)
+      .fit()
+      .centerCrop()
+      .into(this)
+  //Glide.with(context).load(imageUrl).into(this)
 
 
 }

@@ -10,20 +10,25 @@ import android.view.Menu
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.LinearLayout
+import co.zsmb.materialdrawerkt.R.attr.divider
 import co.zsmb.materialdrawerkt.builders.drawer
 import co.zsmb.materialdrawerkt.draweritems.badgeable.primaryItem
+import co.zsmb.materialdrawerkt.draweritems.badgeable.secondaryItem
 import com.lapism.searchview.SearchView
 import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.Drawer
 import com.wasseemb.FeatherForReddit.Adapter.UserAdapter
+import com.wasseemb.FeatherForReddit.Api.RedditNewsResponse
 import com.wasseemb.FeatherForReddit.Api.RestApi
 import com.wasseemb.FeatherForReddit.R.layout
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper.defaultPrefs
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper.get
+import com.wasseemb.FeatherForReddit.extensions.PreferenceHelper.set
 import com.wasseemb.FeatherForReddit.extensions.applySchedulersWithDelay
 import com.wasseemb.FeatherForReddit.extensions.setupImageClick
 import com.wasseemb.FeatherForReddit.extensions.setupItemClick
 import com.wasseemb.FeatherForReddit.model.DisplayableItem
 import com.wasseemb.FeatherForReddit.model.Loading
-import kotlinx.android.synthetic.main.activity_main.fab
 import kotlinx.android.synthetic.main.activity_main.searchView
 import kotlinx.android.synthetic.main.fragment_main.recyclerview
 
@@ -43,20 +48,45 @@ class MainActivity : AppCompatActivity() {
 
     setUpSearchView()
     recyclerview.setHasFixedSize(true)
+    recyclerview.setItemViewCacheSize(10)
+    recyclerview.isDrawingCacheEnabled = true
+    recyclerview.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
     recyclerview.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
     recyclerview.adapter = UserAdapter(this, data)
-
-    searchView.setOnClickListener { recyclerview.smoothScrollToPosition(0) }
     result = drawer {
-      primaryItem("FrontPage") {
+      primaryItem("Home") {
+
+        icon = R.mipmap.ic_launcher
         onClick { _ ->
           frontPage()
           searchView.hint = "Feather for Reddit"
           false
         }
       }
+      divider
+      primaryItem("Settings") {
+        icon = android.R.drawable.ic_menu_preferences
+        secondaryItem("Switch Cards") {
+          onClick { _ ->
+            val prefs = defaultPrefs(this@MainActivity)
+            val value: String? = prefs["card", "mini"] //getter
+            if (value.equals("mini"))
+              prefs["card"] = "large"
+            else
+              prefs["card"] = "mini"
+            recyclerview.layoutManager = LinearLayoutManager(this@MainActivity,
+                LinearLayout.VERTICAL, false)
+            recyclerview.adapter = UserAdapter(this@MainActivity, data)
+            recyclerview.adapter.notifyDataSetChanged()
+            setupItemClick(recyclerview.adapter as UserAdapter,
+                applicationContext)
+            setupImageClick(recyclerview.adapter as UserAdapter,
+                applicationContext)
+            false
+          }
+        }
+      }
     }
-
     frontPage()
 
 
@@ -97,97 +127,10 @@ class MainActivity : AppCompatActivity() {
         applicationContext)
     setupImageClick(recyclerview.adapter as UserAdapter,
         applicationContext)
-    fab.setOnClickListener {
-    }
+
 
   }
 
-
-  override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    // Inflate the menu; this adds items to the action bar if it is present.
-    menuInflater.inflate(R.menu.menu_main, menu)
-    return true
-  }
-
-
-  private fun showPopup(v: View) {
-    var query: String
-    if (searchView.hint.equals("Feather for Reddit"))
-      query = "popular"
-    else
-      query = searchView.hint.toString()
-    val popup = PopupMenu(this, v)
-    val inflater = popup.menuInflater
-    inflater.inflate(R.menu.menu_main, popup.menu)
-    popup.show()
-
-    popup.setOnMenuItemClickListener {
-      when (it.itemId) {
-        R.id.action_hot -> {
-          Log.d("MainActivity", "Hot")
-          openSub(query, "hot")
-
-          true
-        }
-        R.id.action_new -> {
-          openSub(query, "new")
-          true
-        }
-
-        R.id.action_controversial -> {
-          popupTopSince(v, "controversial")
-          true
-        }
-        R.id.action_rising -> {
-          openSub(query, "rising")
-          true
-        }
-        R.id.action_top -> {
-          popupTopSince(v, "top")
-          true
-        }
-        else -> super.onOptionsItemSelected(it)
-      }
-    }
-  }
-
-  private fun popupTopSince(v: View, mode: String) {
-    var query: String
-    if (searchView.hint.equals("Feather for Reddit"))
-      query = "popular"
-    else
-      query = searchView.hint.toString()
-    val popup = PopupMenu(this, v)
-    val inflater = popup.menuInflater
-    inflater.inflate(R.menu.top_since, popup.menu)
-    popup.show()
-    popup.setOnMenuItemClickListener {
-      when (it.itemId) {
-        R.id.action_hour -> {
-          openSubSort(query = query, mode = mode, time = "hour")
-          true
-        }
-        R.id.action_day -> {
-          openSubSort(query = query, mode = mode, time = "day")
-          true
-        }
-        R.id.action_week -> {
-          openSubSort(query = query, mode = mode, time = "week")
-          true
-        }
-        R.id.action_month -> {
-          openSubSort(query = query, mode = mode, time = "month")
-          true
-        }
-        R.id.action_alltime -> {
-          openSubSort(query = query, mode = mode, time = "all")
-          true
-        }
-        else -> super.onOptionsItemSelected(it)
-      }
-    }
-
-  }
 
   private fun setUpSearchView() {
     if (searchView != null) {
@@ -221,72 +164,40 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
+  private fun frontPage(mode: String = "hot") {
+    recyclerview.clearOnScrollListeners()
+    restApi.getNews(mode = mode)
+        .applySchedulersWithDelay()
+        .subscribe({
+          dataHandle(data, it)
+        }, { e -> Log.d("Tag", e.toString()) }, { Log.d("Tag", "Completed") })
 
-  private fun frontPage() {
-    openSub("popular", "hot")
 
+    recyclerview.addOnScrollListener(
+        InfiniteScrollListener({
+          restApi.getNews(after = after)
+              .applySchedulersWithDelay()
+              .subscribe {
+                dataHandleInfiniteScrollListener(data, it)
+              }
+        }, recyclerview.layoutManager as LinearLayoutManager)
+    )
   }
-//  private fun frontPage() {
-//    recyclerview.clearOnScrollListeners()
-//    restApi.getNews()
-//        .applySchedulersWithDelay()
-//        .subscribe({
-//          data.clear()
-//          data.addAll(it.data.children)
-//          data.add(Loading())
-//          // recyclerview.adapter.notifyDataSetChanged()
-//          runLayoutAnimation(recyclerview)
-//          after = it.data.after
-//        }, { e -> Log.d("Tag", e.toString()) }, { Log.d("Tag", "Completed") })
-//
-//
-//    recyclerview.addOnScrollListener(
-//        InfiniteScrollListener({
-//          restApi.getNews(after = after)
-//              .applySchedulersWithDelay()
-//              .subscribe {
-//                val last = data.size
-//                data.removeAt(last - 1)
-//                data.addAll(it.data.children)
-//                recyclerview.adapter.notifyItemInserted(last)
-//                after = it.data.after
-//                data.add(Loading())
-//              }
-//        }, recyclerview.layoutManager as LinearLayoutManager)
-//    )
-//  }
-
 
   fun openSub(query: String, mode: String) {
 
     restApi.openNewSub(subreddit = query, mode = mode)
         .applySchedulersWithDelay()
         .subscribe {
-          data.clear()
-          data.addAll(it.data.children)
-          after = it.data.after
-          runLayoutAnimation(recyclerview)
-
-          //recyclerview.adapter = UserAdapter(this@MainActivity, data)
-          recyclerview.adapter.notifyDataSetChanged()
+          dataHandle(data, it)
           searchView.hint = query.capitalize()
-          if (searchView.hint.equals("Popular"))
-            searchView.hint = "Feather for Reddit"
-          recyclerview.smoothScrollToPosition(0)
-
-
         }
     recyclerview.addOnScrollListener(
         InfiniteScrollListener({
           restApi.openNewSub(subreddit = query, mode = mode, after = after!!)
               .applySchedulersWithDelay()
               .subscribe {
-                val last = data.size
-                data.removeAt(last - 1)
-                data.addAll(it.data.children)
-                recyclerview.adapter.notifyItemInserted(last)
-                after = it.data.after
-                data.add(Loading())
+                dataHandleInfiniteScrollListener(data, it)
               }
         }, recyclerview.layoutManager as LinearLayoutManager)
     )
@@ -298,28 +209,15 @@ class MainActivity : AppCompatActivity() {
     restApi.openSubSort(subreddit = query, mode = mode, time = time)
         .applySchedulersWithDelay()
         .subscribe {
-          data.clear()
-          data.addAll(it.data.children)
-          after = it.data.after
-          //recyclerview.adapter = UserAdapter(this@MainActivity, data)
-          recyclerview.adapter.notifyDataSetChanged()
+          dataHandle(data, it)
           searchView.hint = query.capitalize()
-          if (searchView.hint.equals("Popular"))
-            searchView.hint = "Feather for Reddit"
-          recyclerview.smoothScrollToPosition(0)
-
         }
     recyclerview.addOnScrollListener(
         InfiniteScrollListener({
           restApi.openSubSort(subreddit = query, mode = mode, after = after!!, time = time)
               .applySchedulersWithDelay()
               .subscribe {
-                val last = data.size
-                data.removeAt(last - 1)
-                data.addAll(it.data.children)
-                recyclerview.adapter.notifyItemInserted(last)
-                after = it.data.after
-                data.add(Loading())
+                dataHandleInfiniteScrollListener(data, it)
               }
         }, recyclerview.layoutManager as LinearLayoutManager)
     )
@@ -333,5 +231,104 @@ class MainActivity : AppCompatActivity() {
     recyclerView.adapter.notifyDataSetChanged()
     recyclerView.scheduleLayoutAnimation()
   }
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    // Inflate the menu; this adds items to the action bar if it is present.
+    menuInflater.inflate(R.menu.menu_main, menu)
+    return true
+  }
+
+
+  private fun showPopup(v: View) {
+    val query = searchView.hint.toString()
+    val popup = PopupMenu(this, v)
+    val inflater = popup.menuInflater
+    inflater.inflate(R.menu.menu_main, popup.menu)
+    popup.show()
+
+    popup.setOnMenuItemClickListener {
+      when (it.itemId) {
+        R.id.action_hot -> {
+          openSub(query, "hot")
+          true
+        }
+        R.id.action_new -> {
+          openSub(query, "new")
+          true
+        }
+
+        R.id.action_controversial -> {
+          popupTopSince(v, "controversial")
+          true
+        }
+        R.id.action_rising -> {
+          openSub(query, "rising")
+          true
+        }
+        R.id.action_top -> {
+          popupTopSince(v, "top")
+          true
+        }
+        else -> super.onOptionsItemSelected(it)
+      }
+    }
+  }
+
+  private fun popupTopSince(v: View, mode: String) {
+    val query = searchView.hint.toString()
+    val popup = PopupMenu(this, v)
+    val inflater = popup.menuInflater
+    inflater.inflate(R.menu.top_since, popup.menu)
+    popup.show()
+    popup.setOnMenuItemClickListener {
+      when (it.itemId) {
+        R.id.action_hour -> {
+          openSubSort(query = query, mode = mode, time = "hour")
+          true
+        }
+        R.id.action_day -> {
+          openSubSort(query = query, mode = mode, time = "day")
+          true
+        }
+        R.id.action_week -> {
+          openSubSort(query = query, mode = mode, time = "week")
+          true
+        }
+        R.id.action_month -> {
+          openSubSort(query = query, mode = mode, time = "month")
+          true
+        }
+        R.id.action_alltime -> {
+          openSubSort(query = query, mode = mode, time = "all")
+          true
+        }
+        else -> super.onOptionsItemSelected(it)
+      }
+    }
+
+  }
+
+  private fun dataHandle(data: ArrayList<DisplayableItem>, newsResponse: RedditNewsResponse) {
+    data.clear()
+    data.addAll(newsResponse.data.children)
+    data.add(Loading())
+    // recyclerview.adapter.notifyDataSetChanged()
+    runLayoutAnimation(recyclerview)
+    after = newsResponse.data.after
+    recyclerview.smoothScrollToPosition(0)
+
+  }
+
+  private fun dataHandleInfiniteScrollListener(data: ArrayList<DisplayableItem>,
+      newsResponse: RedditNewsResponse) {
+    val last = data.size
+    data.removeAt(last - 1)
+    data.addAll(newsResponse.data.children)
+    recyclerview.adapter.notifyItemInserted(last)
+    after = newsResponse.data.after
+    data.add(Loading())
+  }
+
+
 }
 

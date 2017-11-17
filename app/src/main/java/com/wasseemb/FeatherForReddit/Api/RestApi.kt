@@ -30,13 +30,17 @@ class RestApi() {
     redditApi = retrofit.create(RedditApi::class.java)
   }
 
-  fun getNews(limit: String = "", after: String? = ""): Observable<RedditNewsResponse> {
-    return redditApi.getNews(limit, after)
-  }
+  fun getNews(limit: String = "", mode: String = "hot",
+      after: String? = ""): Observable<RedditNewsResponse> = redditApi.getNews(limit, mode, after)
 
-  fun getPost(permalink: String): Observable<List<Post>> {
-    return redditApi.getPost(permalink + ".json?limit=10")
-  }
+  fun getNewsSort(limit: String = "", mode: String = "hot", after: String? = "",
+      time: String): Observable<RedditNewsResponse> = redditApi.getNewsSort(mode, limit, after,
+      mode, time)
+
+
+  fun getPost(permalink: String): Observable<List<Post>> = redditApi.getPost(
+      permalink + ".json?limit=10")
+
 
 //  fun openNewSub(subreddit: String,
 //      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, after)

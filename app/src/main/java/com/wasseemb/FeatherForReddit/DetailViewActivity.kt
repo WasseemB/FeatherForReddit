@@ -37,7 +37,7 @@ class DetailViewActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(layout.reddit_row)
+    setContentView(layout.redditview_row)
 
     val permalink = intent.getStringExtra("permalink")
     card_view.transitionName ="robot_trans"
