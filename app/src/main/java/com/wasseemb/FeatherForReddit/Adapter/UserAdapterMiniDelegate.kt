@@ -1,10 +1,12 @@
 package com.wasseemb.FeatherForReddit.Adapter
 
 import android.app.Activity
+import android.opengl.Visibility
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.RecyclerView.ViewHolder
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -62,6 +64,8 @@ class UserAdapterMiniDelegate(val activity: Activity) : AdapterDelegate<List<Dis
       payloads: MutableList<Any>) {
     val vh = holder as UserViewHolder
     this.items = items
+    vh.imageView.visibility = View.VISIBLE
+
     //Cast to RedditChildrenResponse from DisplayableItem
     val redditItem = (items[position] as RedditChildrenResponse).data
 
@@ -70,15 +74,13 @@ class UserAdapterMiniDelegate(val activity: Activity) : AdapterDelegate<List<Dis
     vh.author.text = redditItem.author
     vh.subreddit.text = "/r/" + redditItem.subreddit
     vh.domain.text = redditItem.domain
-    vh.imageView.loadImage(redditItem.thumbnail)
-//    if (URLUtil.isValidUrl(redditItem.thumbnail)) {
-//      vh.imageView.loadImg(redditItem.thumbnail)
-//      Log.d("Valid","valid")
-//
-//    } else {
-//      vh.relativelayout.visibility = View.GONE
-//      Log.d("Valid","Not valid")
-//    }
+    //vh.imageView.loadImage(redditItem.thumbnail)
+    if (URLUtil.isValidUrl(redditItem.thumbnail)) {
+      vh.imageView.loadImg(redditItem.thumbnail)
+
+    } else {
+      vh.imageView.visibility = View.GONE
+    }
     vh.commentCount.text = String.format(
         activity.resources.getString(R.string.comment_count_message),
         numToK(redditItem.num_comments))

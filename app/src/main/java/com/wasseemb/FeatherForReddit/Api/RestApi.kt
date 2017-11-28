@@ -30,11 +30,12 @@ class RestApi() {
     redditApi = retrofit.create(RedditApi::class.java)
   }
 
-  fun getNews(limit: String = "", mode: String = "hot",
-      after: String? = ""): Observable<RedditNewsResponse> = redditApi.getNews(limit, mode, after)
+//  fun getNews(limit: String = "", mode: String = "hot",
+//      after: String? = ""): Observable<RedditNewsResponse> = redditApi.getNews(limit, mode, after)
 
-  fun getNewsSort(limit: String = "", mode: String = "hot", after: String? = "",
-      time: String): Observable<RedditNewsResponse> = redditApi.getNewsSort(mode, limit, after,
+  fun getNews(limit: String? = null, mode: String = "hot", after: String? = null,
+      time: String? = null): Observable<RedditNewsResponse> = redditApi.getNewsSort(mode, limit,
+      after,
       mode, time)
 
 
@@ -45,14 +46,14 @@ class RestApi() {
 //  fun openNewSub(subreddit: String,
 //      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, after)
 
-  fun openNewSub(subreddit: String,
-      mode: String = "hot",
-      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, mode,
-      after)
+//  fun openNewSub(subreddit: String,
+//      mode: String = "hot",
+//      after: String = ""): Observable<RedditNewsResponse> = redditApi.openNewSub(subreddit, mode,
+//      after)
 
-  fun openSubSort(subreddit: String,
-      mode: String = "top",
-      after: String = "", time: String): Observable<RedditNewsResponse> = redditApi.openSubSort(
+  fun openSub(subreddit: String,
+      mode: String,
+      after: String = "", time: String?): Observable<RedditNewsResponse> = redditApi.openSub(
       subreddit, mode,
       after, mode, time)
 

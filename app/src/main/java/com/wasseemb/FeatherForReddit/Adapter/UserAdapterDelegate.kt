@@ -3,10 +3,8 @@ package com.wasseemb.FeatherForReddit.Adapter
 import android.app.Activity
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.RecyclerView.ViewHolder
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
@@ -52,7 +50,7 @@ class UserAdapterDelegate(val activity: Activity) : AdapterDelegate<List<Display
 
 
   override fun onCreateViewHolder(parent: ViewGroup?): ViewHolder {
-    return UserViewHolder(parent?.inflate(layout.redditview_row)!!)
+    return UserViewHolder(parent?.inflate(layout.redditview_rowlt)!!)
   }
 
   override fun isForViewType(items: List<DisplayableItem>, position: Int): Boolean {
